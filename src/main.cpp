@@ -97,7 +97,7 @@ int Init()
 
     SDL_SetRenderDrawBlendMode(rdr, SDL_BLENDMODE_BLEND);
 
-    bg = IMG_Load("../media/001.jpg");
+    bg = IMG_Load("../media/002.jpg");
     WINDOW_WIDTH = bg->w;
     WINDOW_HEIGHT = bg->h;
 
