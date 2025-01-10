@@ -2,6 +2,7 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 #include <vector>
 #include <random>
 
@@ -11,11 +12,13 @@
 
 int WINDOW_WIDTH;
 int WINDOW_HEIGHT;
+int POINT_COUNT = 0;
 
 SDL_Window *win = nullptr;
 SDL_Renderer *rdr = nullptr;
 SDL_Surface *bg = nullptr;
 SDL_Texture *bg_texture = nullptr;
+Mix_Music *bg_music = nullptr;
 
 // strct for nake
 struct snake_body
@@ -84,6 +87,11 @@ int Init()
         return 1;
     }
 
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        std::cout << "SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return 1;
+    }
+
 
     win = SDL_CreateWindow("SDL2", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT,
                                         SDL_WINDOW_RESIZABLE);
@@ -121,6 +129,14 @@ int Init()
         return 1;
     }
 
+    bg_music = Mix_LoadMUS("../media/background.mp3");
+    if (bg_music == nullptr) {
+        std::cout << "Mix_LoadMUS Error: " << Mix_GetError() << std::endl;
+        return 1;
+    }
+
+    // 播放音乐
+    Mix_PlayMusic(bg_music, -1); // 参数 -1 表示循环播放
 
 
     for (int i = 0; i < 4; i++)
@@ -172,8 +188,8 @@ int Draw()
 
 int OBJ_Add()
 {
-    int add_food_num = 1;
-    int add_band_num = 1;
+    int add_food_num = std::max(2*POINT_COUNT, 1);
+    int add_band_num = std::max(3*POINT_COUNT, 1);
 
     // random init
     std::random_device rd; // 用于生成种子
@@ -283,6 +299,8 @@ int main()
             std::cout << "overlap with food" << std::endl;
             foods.erase(foods.begin()+overlap_check_food);
             snake_body_add();
+            OBJ_Add();
+            POINT_COUNT++;
         }
 
         // band check
