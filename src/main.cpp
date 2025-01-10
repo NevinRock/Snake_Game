@@ -93,7 +93,7 @@ int Init()
     }
 
 
-    win = SDL_CreateWindow("SDL2", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT,
+    win = SDL_CreateWindow("Snake Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT,
                                         SDL_WINDOW_RESIZABLE);
     // check win
     if (win == NULL)
@@ -176,7 +176,7 @@ int Draw()
     }
 
     // food rende
-    SDL_SetRenderDrawColor(rdr, 0, 0, 255, 255);
+    SDL_SetRenderDrawColor(rdr, 20, 50, 255, 150);
     for (food_location food : foods)
     {
         SDL_RenderFillRect(rdr, &food.body);
