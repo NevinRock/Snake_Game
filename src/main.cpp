@@ -7,18 +7,25 @@
 #include <random>
 
 // global define
-#define OBJ_WIDTH 20
-#define OBJ_HEIGHT 20
+#define OBJ_WIDTH 70
+#define OBJ_HEIGHT 70
+#define BODY_WIDTH 20
+#define BODY_HEIGHT 20
 
 int WINDOW_WIDTH;
 int WINDOW_HEIGHT;
 int POINT_COUNT = 0;
+int Food_Frame_Count = 0;
 
 SDL_Window *win = nullptr;
 SDL_Renderer *rdr = nullptr;
 SDL_Surface *bg = nullptr;
 SDL_Texture *bg_texture = nullptr;
 Mix_Music *bg_music = nullptr;
+
+SDL_Texture *food_texture = nullptr;
+SDL_Texture *band_texture = nullptr;
+
 
 // strct for nake
 struct snake_body
@@ -42,6 +49,24 @@ struct band_location
     SDL_Rect body;
 };
 std::vector<band_location> bands;
+
+// food
+std::vector<SDL_Texture*> food_imgs;
+
+void load_food_images(SDL_Renderer* rdr)
+{
+    for (int i = 0; i < 30; i++)
+    {
+        std::string img_path = "../media/food/" + std::to_string(i) + ".png";
+        SDL_Texture* imgs = IMG_LoadTexture(rdr, img_path.c_str());
+        if (imgs == nullptr)
+        {
+            std::cerr << "Failed to load food images" << std::endl;
+        }
+
+        food_imgs.push_back(imgs);
+    }
+}
 
 // overlap checking
 template <typename T>
@@ -75,6 +100,7 @@ bool boundary_check(const std::vector<snake_body> &snake)
 
 int Init()
 {
+    // global init
     if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0) //success: 0, error: negative
     {
         std::cout << "SDL_Init Error: " << SDL_GetError() << std::endl;
@@ -135,13 +161,22 @@ int Init()
         return 1;
     }
 
-    // 播放音乐
-    Mix_PlayMusic(bg_music, -1); // 参数 -1 表示循环播放
+    // play music
+    Mix_PlayMusic(bg_music, -1);
+
+    // band init
+    band_texture = IMG_LoadTexture(rdr, "../media/band.jpg");
+
+    //food init
+    load_food_images(rdr);
 
 
+
+
+    //snake init
     for (int i = 0; i < 4; i++)
     {
-        snakes.push_back({{200-25*i, 200, OBJ_WIDTH,OBJ_HEIGHT}, OBJ_WIDTH+5, 0});
+        snakes.push_back({{200-(BODY_WIDTH+5)*i, 200, BODY_WIDTH,BODY_HEIGHT}, BODY_WIDTH+5, 0});
     }
 
     return 0;
@@ -176,18 +211,21 @@ int Draw()
     }
 
     // food rende
-    SDL_SetRenderDrawColor(rdr, 20, 50, 255, 150);
-    for (food_location food : foods)
+    for (food_location &food : foods)
     {
-        SDL_RenderFillRect(rdr, &food.body);
-    }
-    // band rende
-    SDL_SetRenderDrawColor(rdr, 255, 0, 0, 255);
+        food_texture = food_imgs[Food_Frame_Count];
+        SDL_RenderCopy(rdr, food_texture, NULL, &food.body);
+        Food_Frame_Count = (Food_Frame_Count + 1) % 30;
 
-    for (band_location band : bands)
-    {
-        SDL_RenderFillRect(rdr, &band.body);
     }
+
+    // band rende
+    for (band_location &band : bands)
+    {
+        SDL_RenderCopy(rdr, band_texture, NULL, &band.body);
+    }
+
+
     SDL_RenderPresent(rdr);
 
     return 0;
@@ -268,24 +306,30 @@ int main()
                 {
                     case SDLK_UP:
                         snakes[0].dx = 0;
-                        snakes[0].dy = -(OBJ_WIDTH+5);
+                        snakes[0].dy = -(BODY_WIDTH+5);
                         break;
 
                     case SDLK_DOWN:
                         snakes[0].dx = 0;
-                        snakes[0].dy = OBJ_WIDTH+5;
+                        snakes[0].dy = BODY_WIDTH+5;
                         break;
 
                     case SDLK_LEFT:
-                        snakes[0].dx = -(OBJ_WIDTH+5);
+                        snakes[0].dx = -(BODY_WIDTH+5);
                         snakes[0].dy = 0;
                         break;
 
                     case SDLK_RIGHT:
-                        snakes[0].dx = OBJ_WIDTH+5;
+                        snakes[0].dx = BODY_WIDTH+5;
                         snakes[0].dy = 0;
                         break;
                 }
+            }
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                WINDOW_WIDTH = event.window.data1; // update new width
+                WINDOW_HEIGHT = event.window.data2; // update new height
+
+                std::cout << "Window resized: " << WINDOW_WIDTH << "x" << WINDOW_HEIGHT << std::endl;
             }
 
         }
@@ -295,6 +339,7 @@ int main()
         // boundary_check
         if (boundary_check(snakes))
         {
+            std::cout << "Collition Boundary" << std::endl;
             break;
         }
 
