@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -122,7 +123,7 @@ int Init()
 
 
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 4; i++)
     {
         snakes.push_back({{200-25*i, 200, OBJ_WIDTH,OBJ_HEIGHT}, OBJ_WIDTH+5, 0});
     }
@@ -136,7 +137,7 @@ int Draw()
     SDL_RenderCopy(rdr, bg_texture, NULL, NULL);
 
     //snake movement
-    for (int i = snakes.size(); i > 0; i--)
+    for (int i = snakes.size()-1; i > 0; i--)
     {
         snakes[i].body = snakes[i-1].body;
     }
@@ -196,6 +197,14 @@ int OBJ_Add()
     return 0;
 }
 
+int snake_body_add()
+{
+    snake_body snakes_new_body = snakes.back();
+    snakes.push_back(snakes_new_body);
+
+    return 0;
+}
+
 int main()
 {
     int loop_cout = 0;
@@ -207,7 +216,7 @@ int main()
     while (true)
     {
         loop_cout++;
-        if (loop_cout % 100 == 0)
+        if (loop_cout % 50 == 0)
         {
             OBJ_Add();
         }
@@ -272,6 +281,8 @@ int main()
         if (overlap_check_food != -1)
         {
             std::cout << "overlap with food" << std::endl;
+            foods.erase(foods.begin()+overlap_check_food);
+            snake_body_add();
         }
 
         // band check
@@ -281,8 +292,6 @@ int main()
             std::cout << "overlap with bands" << std::endl;
             break;
         }
-
-
 
     }
 
