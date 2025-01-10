@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <vector>
+#include <random>
 
 // global define
 #define OBJ_WIDTH 20
@@ -40,18 +41,22 @@ std::vector<band_location> bands;
 
 // overlap checking
 template <typename T>
-SDL_bool overlap_check(const std::vector<snake_body> &snake , const std::vector<T> &obj)
+int overlap_check(const std::vector<snake_body> &snake , const std::vector<T> &obj)
 {
     SDL_bool output = SDL_FALSE;
-    for (const snake_body &x : snake)
+
+    for (int i = 0; i < snake.size(); i++)
     {
-        for (const T &y : obj)
+        for (int j = 0; j < obj.size(); j++)
         {
-            output = SDL_HasIntersection(&x.body, &y.body);
+            if (SDL_HasIntersection(&snake[i].body, &obj[j].body))
+            {
+                return static_cast<int>(j);
+            }
         }
     }
 
-    return output;
+    return -1;
 }
 
 bool boundary_check(const std::vector<snake_body> &snake)
@@ -97,7 +102,7 @@ int Init()
 
     SDL_SetRenderDrawBlendMode(rdr, SDL_BLENDMODE_BLEND);
 
-    bg = IMG_Load("../media/002.jpg");
+    bg = IMG_Load("../media/001.jpg");
     WINDOW_WIDTH = bg->w;
     WINDOW_HEIGHT = bg->h;
 
@@ -145,20 +150,68 @@ int Draw()
     {
         SDL_RenderFillRect(rdr, &snake.body);
     }
+    // food rende
+    SDL_SetRenderDrawColor(rdr, 0, 0, 255, 255);
+    for (food_location food : foods)
+    {
+        SDL_RenderFillRect(rdr, &food.body);
+    }
+    // band rende
+    SDL_SetRenderDrawColor(rdr, 255, 0, 0, 255);
 
+    for (band_location band : bands)
+    {
+        SDL_RenderFillRect(rdr, &band.body);
+    }
     SDL_RenderPresent(rdr);
 
     return 0;
 
 }
 
+int OBJ_Add()
+{
+    int add_food_num = 1;
+    int add_band_num = 1;
+
+    // random init
+    std::random_device rd; // 用于生成种子
+    std::mt19937 gen(rd()); // 随机数生成器（Mersenne Twister）
+    std::uniform_int_distribution<> dist_x(25, WINDOW_WIDTH - 25);
+    std::uniform_int_distribution<> dist_y(0, WINDOW_HEIGHT - 25);
+
+
+    // add food
+    for (int i = 0; i < add_food_num; i++)
+    {
+        foods.push_back({{dist_x(gen), dist_y(gen), OBJ_WIDTH, OBJ_WIDTH}});
+    }
+
+    // add band
+    for (int i = 0; i < add_band_num; i++)
+    {
+        bands.push_back({{dist_x(gen), dist_y(gen), OBJ_WIDTH, OBJ_WIDTH}});
+    }
+
+    return 0;
+}
+
 int main()
 {
+    int loop_cout = 0;
     Init();
+    OBJ_Add();
+
     SDL_Event event;
 
     while (true)
     {
+        loop_cout++;
+        if (loop_cout % 100 == 0)
+        {
+            OBJ_Add();
+        }
+
         // update screen
         Draw();
 
@@ -205,13 +258,36 @@ int main()
         }
 
         // check events
+
+        // boundary_check
         if (boundary_check(snakes))
         {
             break;
         }
 
         SDL_Delay(100);
+
+        // food_check
+        int overlap_check_food = overlap_check(snakes, foods);
+        if (overlap_check_food != -1)
+        {
+            std::cout << "overlap with food" << std::endl;
+        }
+
+        // band check
+        int overlap_check_band = overlap_check(snakes, bands);
+        if (overlap_check_band != -1)
+        {
+            std::cout << "overlap with bands" << std::endl;
+            break;
+        }
+
+
+
     }
+
+
+
 
     // Destroy, free RAM
     SDL_DestroyTexture(bg_texture);
