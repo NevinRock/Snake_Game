@@ -162,11 +162,19 @@ int Draw()
     snakes[0].body.y += snakes[0].dy;
 
     // snake rende
-    SDL_SetRenderDrawColor(rdr, 0, 255, 0, 255);
-    for (snake_body snake : snakes)
+
+    for (int i = 0; i < snakes.size(); i++)
     {
-        SDL_RenderFillRect(rdr, &snake.body);
+        if (i == 0)
+        {
+            SDL_SetRenderDrawColor(rdr, 0, 255, 255, 255);
+        }else
+        {
+            SDL_SetRenderDrawColor(rdr, 0, 255, 0, 100);
+        }
+        SDL_RenderFillRect(rdr, &snakes[i].body);
     }
+
     // food rende
     SDL_SetRenderDrawColor(rdr, 0, 0, 255, 255);
     for (food_location food : foods)
@@ -232,7 +240,7 @@ int main()
     while (true)
     {
         loop_cout++;
-        if (loop_cout % 50 == 0)
+        if (loop_cout % 100 == 0)
         {
             OBJ_Add();
         }
