@@ -256,6 +256,18 @@ int OBJ_Add()
         bands.push_back({{dist_x(gen), dist_y(gen), OBJ_WIDTH, OBJ_WIDTH}});
     }
 
+    // check overlap between foods and bands
+    for (int i = 0; i < foods.size(); i++)
+    {
+        for (int j = 0; j < bands.size(); j++)
+        {
+            if (foods[i].body.x == bands[j].body.x && foods[i].body.y == bands[j].body.y)
+            {
+                bands.erase(bands.begin() + j);
+            }
+        }
+    }
+
     return 0;
 }
 
