@@ -1,0 +1,3 @@
+/home/ningwei/Desktop/code/cpp/Snake_Game/cmake-build-debug/CMakeFiles/Snake_Game.dir
+/home/ningwei/Desktop/code/cpp/Snake_Game/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/ningwei/Desktop/code/cpp/Snake_Game/cmake-build-debug/CMakeFiles/rebuild_cache.dir
