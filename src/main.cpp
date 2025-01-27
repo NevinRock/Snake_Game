@@ -5,6 +5,7 @@
 #include <SDL2/SDL_mixer.h>
 #include <vector>
 #include <random>
+#include <cmath>
 
 // global define
 #define OBJ_WIDTH 70
@@ -16,6 +17,8 @@ int WINDOW_WIDTH;
 int WINDOW_HEIGHT;
 int POINT_COUNT = 0;
 int Food_Frame_Count = 0;
+const int FPS = 60;
+const int FrameDelay = 1000 / FPS;
 
 SDL_Window *win = nullptr;
 SDL_Renderer *rdr = nullptr;
@@ -176,7 +179,7 @@ int Init()
     //snake init
     for (int i = 0; i < 4; i++)
     {
-        snakes.push_back({{200-(BODY_WIDTH+5)*i, 200, BODY_WIDTH,BODY_HEIGHT}, BODY_WIDTH+5, 0});
+        snakes.push_back({{200-(BODY_WIDTH+5)*i, 200, BODY_WIDTH,BODY_HEIGHT}, 5, 5});
     }
 
     return 0;
@@ -298,6 +301,9 @@ int main()
         // update screen
         Draw();
 
+        // 获取帧开始时间
+        Uint32 frame_start = SDL_GetTicks();
+
         // input detection
         while (SDL_PollEvent(&event))
         {
@@ -316,27 +322,38 @@ int main()
             {
                 switch (event.key.keysym.sym)
                 {
-                    case SDLK_UP:
-                        snakes[0].dx = 0;
-                        snakes[0].dy = -(BODY_WIDTH+5);
-                        break;
+                    case SDLK_e:
+                        return 1;
 
-                    case SDLK_DOWN:
-                        snakes[0].dx = 0;
-                        snakes[0].dy = BODY_WIDTH+5;
-                        break;
-
-                    case SDLK_LEFT:
-                        snakes[0].dx = -(BODY_WIDTH+5);
-                        snakes[0].dy = 0;
-                        break;
-
-                    case SDLK_RIGHT:
-                        snakes[0].dx = BODY_WIDTH+5;
-                        snakes[0].dy = 0;
+                    default:
                         break;
                 }
             }
+            if (event.type == SDL_MOUSEMOTION) // 检测鼠标移动事件
+            {
+                int mouse_x = event.motion.x; // 鼠标的 X 坐标
+                int mouse_y = event.motion.y; // 鼠标的 Y 坐标
+                // std::cout << "Mouse Position: (" << mouse_x << ", " << mouse_y << ")" << std::endl;
+                // update snake position
+                double delta_x = snakes[0].body.x - mouse_x;
+                double delta_y = snakes[0].body.y - mouse_y;
+                double theta = atan2(delta_y, delta_x);
+                std::cout << "theta: " << theta << std::endl;
+
+                double dx = snakes[0].dx * cos(theta);
+                double dy = snakes[0].dy * sin(theta);
+
+
+                snakes[0].body.x -= dx;
+                snakes[0].body.y -= dy;
+
+                std::cout << "snake_x: " << snakes[0].body.x << "  snake_y: " << snakes[0].body.y << std::endl;
+            }
+
+
+
+
+            // reshape window
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED) {
                 WINDOW_WIDTH = event.window.data1; // update new width
                 WINDOW_HEIGHT = event.window.data2; // update new height
@@ -375,6 +392,14 @@ int main()
             std::cout << "overlap with bands" << std::endl;
             break;
         }
+
+        // 限制帧率
+        Uint32 frame_time = SDL_GetTicks() - frame_start; // 计算帧耗时
+        if (frame_time < FrameDelay)
+        {
+            SDL_Delay(FrameDelay - frame_time); // 等待剩余时间
+        }
+
 
     }
 
